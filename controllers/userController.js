@@ -2,6 +2,7 @@
 const UserModel = require("../models/userModel")
 const bcrypt = require('bcrypt');
 const { tokenGenrate } = require("../tkns/token");
+const nodemailer= require('nodemailer') 
 const userModel = require("../models/userModel");
 
 const userRegister = async(req, res)=>{
@@ -108,9 +109,67 @@ const userRegister = async(req, res)=>{
       return res.status(500).json({ error: "user user does not exist" });
     }
   }
+
+  const forgotPassword = async(req, res)=>{
+
+try {   
+  const {email} = req.body;
+
+  //if(!email){
+
+  //return res.status(400).json({error:  "All field are required"})
+  // }
+
+
+   const user = await UserModel.findOne({email});
+   console.log(user)
+   
+   if(!user){
+     return res.status(400).json({ error: "user user does not exist" });
+    }
+      const sckey = process.env.JWT + user.password;
+      const token = JWT.sign({id:user._id, email:user.email},sckey,{expiresin:'1h'})
+      
+      const resetURL = `https://your-backend-url/resetpassword?id=${user._id}&token=${token}`;
+      
+                
+       const mailtrans = nodemailer.createTransport({
+        service: 'gmail',
+        auth :{
+          user: "gmailid",
+          pass: "pass",
+        },
+       });
+       const  mailsend ={
+        to: user.email,
+        form: process.env.EMAIL,
+        subject :"Password Reset Request",
+        text : `Your are receiving your password reset link Please click the link you can change your password`
+
+
+       };
+        await mailtrans.sendMail(mailsend)
+        res.status(200).json({message: 'Password reset link send'});
+       
+
+
+
+
+
+
+
+  
+
+} catch (error) {
+      return res.status(500).json({ error: "internal server error"});
+}
+  }
+
+  
+
  
 
 
 
-module.exports = {userRegister,login,userProfile,logout,userCheking}
+module.exports = {userRegister,login,userProfile,logout,userCheking,forgotPassword}
 
