@@ -2,7 +2,8 @@ var jwt = require('jsonwebtoken');
 
 const tokenGenrate = (user, userType)=>{
     try {
-        var token = jwt.sign({id: user._id, usertype: userType},process.env.JWT_KEY);
+        var token = jwt.sign({id: user._id, userType: userType},process.env.JWT_KEY);
+       
         return token;
         
     } catch (error) {

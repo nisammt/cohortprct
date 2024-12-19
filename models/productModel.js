@@ -1,7 +1,7 @@
 const mongoose =require('mongoose')
  
 
-const productSchema = new mongoose.Schema({
+const ProductSchema = new mongoose.Schema({
     
     title:{
             type: String,
@@ -13,22 +13,20 @@ const productSchema = new mongoose.Schema({
             
         },
         stock:{
-            type: Number
-       },
-       category :{
+            type: Number  
+          },
+        image:{
+            type: String
 
-        type: Schema.Types.ObjectId,
-        ref:"category",
+        },
 
-       },
-       createdby :{
-        type: Schema.Types.ObjectId,
-        ref :"users"
-       }
-       
-                
+       categoty:{ type:mongoose.Types.ObjectId, ref: "categories"},
 
+        createdby :{type :mongoose.Types.ObjectId, ref: "users"},
+      
+        
+},
 
-},{timestamps: true})
+{timestamps: true})
 
-module.exports = new mongoose.model("products",productSchema)
+module.exports = new mongoose.model("products",ProductSchema)

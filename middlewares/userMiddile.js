@@ -12,13 +12,14 @@ try {
  if(!decoded){
     return res.status(401).json({ message: "user not registerd" });
  }
+ 
       req.user = decoded
 
 
 next()
     
 } catch (error) {
-    
+   return res.status(500).json({ message: "something went worng please try again" }); 
 }
 }
 

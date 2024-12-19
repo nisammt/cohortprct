@@ -7,7 +7,7 @@ const userModel = require("../models/userModel");
 
 const userRegister = async(req, res)=>{
     try {
-            const {name, password, email, mobile} = req.body
+            const {name, password, email, mobile, userType} = req.body
             if(!name || !password || !email || !mobile){
                 return res.status(400).json({error:  "All field are required"})
             }
@@ -29,7 +29,7 @@ const userRegister = async(req, res)=>{
 
 
              const userData = new UserModel({
-              name, password:hashpassword ,email ,mobile
+              name, password:hashpassword ,email ,mobile,userType
              })
         
             const newUser = await userData.save()
@@ -152,24 +152,29 @@ try {
         res.status(200).json({message: 'Password reset link send'});
        
 
-
-
-
-
-
-
-  
-
 } catch (error) {
-      return res.status(500).json({ error: "internal server error"});
+
+      return res.status(500).json({ error: "something wen wrong"});
 }
+};
+
+const resetPassword = async(req,res)=>{
+  try {
+    const user = await UserModel.findOne({_id:id})
+    if(!user){
+      return res.status(400).json({message: "User not exists"})
+    }
+    const sckey = process.env.JWT + user.password;
+    const veryfy = jwt.veryfy(token, sckey);
+    const encryptedPassword = await bcrypt.hash(password,)
+
+
+
+  } catch (error) {
+    res.status(500).json({message :" something went worng "})
   }
-
-  
-
- 
+}
 
 
-
-module.exports = {userRegister,login,userProfile,logout,userCheking,forgotPassword}
+module.exports = {userRegister,login,userProfile,logout, userCheking, forgotPassword, resetPassword};
 
