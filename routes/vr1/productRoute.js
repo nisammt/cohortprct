@@ -1,14 +1,14 @@
-const { createProduct, allProduct } = require('../../controllers/productController')
+const { createProduct, productDetails, getAllproduct, updateProduct, deleteProduct } = require('../../controllers/productController')
 
 const { upload } = require('../../middlewares/multermiddile')
 
 const productsRouter = require('express').Router()
 
 productsRouter.post("/create-product", upload.single("image"),createProduct)
-productsRouter.get("/getProduct", allProduct)
-productsRouter.get("/getProduct-details")
-productsRouter.put("/update-product")
-productsRouter.delete("/delete-produc")
+productsRouter.get("/getproduct",getAllproduct)
+productsRouter.get("/products/:id",productDetails)
+productsRouter.put("/update-product/:id", updateProduct)
+productsRouter.delete("/delete-product/:id" ,deleteProduct)
 
 
 
