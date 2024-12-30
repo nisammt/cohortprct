@@ -2,12 +2,14 @@ const express = require('express')
 const dbconnction = require('./config/db')
 const mainRoute = require('./routes')
 const cookieParser = require('cookie-parser')
+const cors = require('cors')
 require('dotenv').config()
 
 const app = express()
 dbconnction()
 
 app.use(express.json())
+app.use(cors({origin:["http://localhost:5173","https://mycarte45-nisamudheen-mts-projects.vercel.app/"],credentials:true,methods:["GET", "POST","PUT","DELETE"]}))
 app.use(cookieParser())
 app.use("/main",mainRoute)
 app.all("*",(req, res) =>{
