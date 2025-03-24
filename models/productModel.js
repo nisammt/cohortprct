@@ -7,22 +7,32 @@ const ProductSchema = new mongoose.Schema({
             type: String,
             require : true
         },
+        description:{
+            type: String,
+            required: true,
+            miniLength: 5,
+            maxLength: 100,
+            
+        },
+
         price:{
             type: Number,
             require: true
             
         },
         stock:{
-            type: Number  
+            type: Number,
+            default :0
           },
         image:{
-            type: String
+            type: String,
+            default :"",
 
         },
 
        categoty:{ type:mongoose.Types.ObjectId, ref: "categories"},
 
-        createdby :{type :mongoose.Types.ObjectId, ref: "users"},
+       createdby :{type :mongoose.Types.ObjectId, ref: "admin"},
       
         
 },

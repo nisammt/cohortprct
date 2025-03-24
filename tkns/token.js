@@ -1,13 +1,17 @@
-var jwt = require('jsonwebtoken');
+var jwt = require('jsonwebtoken')
 
-const tokenGenrate = (user, userType)=>{
+ const tokenGenrate =(user, role, res)=>{
     try {
-        var token = jwt.sign({id: user._id, userType: userType},process.env.JWT_KEY);
-       
+        
+          
+        const  token = jwt.sign({id: user._id, role },process.env.JWT_SECRET)
         return token;
         
+        
+        
     } catch (error) {
-        res.status(error.status || 500).json({error:error.message || "internal server Error"});
+        res.status(error.status || 500).json({error:error.message || "internal server Error"}); 
     }
+
 }
-module.exports = {tokenGenrate}
+module.exports ={tokenGenrate}

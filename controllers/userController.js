@@ -1,97 +1,130 @@
-
-const UserModel = require("../models/userModel")
-const bcrypt = require('bcrypt');
+const user = require("../models/userModel");
+const bcrypt = require('bcrypt'); 
 const { tokenGenrate } = require("../tkns/token");
-const nodemailer= require('nodemailer') 
-const userModel = require("../models/userModel");
 
-const userRegister = async(req, res)=>{
+const userSignup = async (req, res)=>{
     try {
-            const {name, password, email, mobile, userType} = req.body
-            if(!name || !password || !email || !mobile){
-                return res.status(400).json({error:  "All field are required"})
-            }
-            const checkuser = await UserModel. findOne({email})
-             //console.log(checkuser)
-             if(checkuser){
-                return res.status(400).json({error: "User already exist"})
-                
-             }
-              const mobcheck =await UserModel .findOne({mobile})
-             // console.log(mobcheck)
-              if(mobcheck){
-                return res.status(400).json({error: "Mobilenumber already exist"})
-              }
-
-              const salt = await bcrypt.genSalt()
-              const hashpassword = await bcrypt.hash(password, salt)
-              console.log(hashpassword)
-
-
-             const userData = new UserModel({
-              name, password:hashpassword ,email ,mobile,userType
-             })
+      
+        const { name, email, mobile, password, confirmPassword } = req.body;
         
-            const newUser = await userData.save()
-            res.status(200).json({ message: "User created successfully", data: newUser});
-           // console.log(newUser)
-           // res.send("user saved")
-         // console.log("user saved")
+        if (!name || !email || !mobile || !password || !confirmPassword) {
+            return res.status(400).json({ message: "All fields are required" });
+          }
+
+          if (password !== confirmPassword) {
+            return res
+              .status(400)
+              .json({ message: "Password and Confirm password not match" });
+          }
+
+          const checkUser = await user.findOne({email}).select("-password");
+
+          if(checkUser) {
+            return res.status(400).json({message: " User already Exsit"})
+          }
+           const mobileCheck = await user.findOne({email}).select("-password");
            
-        
-    } 
-    catch (error) {
-        console.log(error)
-        res.status(error.status || 500).json({error: error.message || "internal server error" })
-       
-    
-    
-  }};
-  const login = async(req, res)=>{
-    try {
-      const {email, password} = req.body
-       if(!email || !password){
-        return res.status(400).json({ error: "All feilds are required" });
-       }
-      const user = await UserModel.findOne({email})
-      console.log(user)
-      if(!user){
-        return res.status(400).json({ error: "user user does not exist" });
-      }
+           if(mobileCheck) {
 
+             return res.status(400).json({message:"Mobile Number already Exsit" })
+           }
+           const salt = await bcrypt.genSalt(10);
+           
+          const hashedPassword = await bcrypt.hash(password,salt)
+          const userData = new user({
+            name,email,password:hashedPassword,mobile,
+          });
+          const saveUser = await userData.save();
 
-      const passwordcheck = await bcrypt.compare(password,user.password);
-      console.log(passwordcheck);
-       
-      if(!passwordcheck){
-        return res.status(400).json({ error: "incrroct password" }); 
-      }
-       const token = tokenGenrate(user, "user")
-      // console.log(token)
-      res.cookie("token",token)
-      
-      //res.send("login succesfully")
-      res.status(200).json({message:"Login successfully", data:user});
-    
+          const { password: _, ...userWithoutPassword } = saveUser.toObject();
+
+          res.status(200).json({message: "Admin Created Succesfuly", data: userWithoutPassword})
+
     } catch (error) {
-      return res.status(500).json({ error: "internal server error" });
+        res.status(error.status || 500).json({error: error.message || "internal server error" })        
     }
-     
-  };
+}
 
-  const userProfile = async (req,res)=>{
+const userLogin = async (req, res)=>{
+  try {
+    const {email, password}= req.body;
+   console.log(req.body);
+   
+  
+  if (!email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
 
-    try {
-    const userid =req.user.id;
-    const user = await userModel.findById(userid).select("-password") 
-    res.status(200).json({ message: "user profile ", data: user});
-      
-    } catch (error) {
-      return res.status(500).json({ error: "internal server error" });
-    }
+  let userChecking = await user.findOne({email})
+ 
+  //console.log("userChecking", userChecking);
+  
 
-  };
-  const logout = async(req, res)=>{
+  if(!userChecking)
+  {
+    return res.status(400).json({message: "User not found"});
+
+  }
+
+  if(!userChecking.isActive)
+  {
+    return res.status(400).json({ message: "User profile deactivated" });
+  }
+
+  // console.log("user activate",userChecking.isActive);
+   
+   const checkPassword = await bcrypt.compare(password,userChecking.password)
+
+  console.log("check password", checkPassword);
+   
+
+  if(!checkPassword)
+  {
+    return res.status(400).json({message:"Incorrect Password"})
+  }
+  //console.log(checkPassword);
+  
+  const token = tokenGenrate(user,"user",res);
+
+  res.cookie("token",token);
+
+  const {password:_,...userWithoutPassword} = userChecking.toObject();
+
+  res.status(200).json({message:"Login successfuly", data :userWithoutPassword });
+
+   
+ } catch (error) {
+
+  res.status(error.status || 500).json({error: error.message || "internal server error" })    
+ }
+
+ }
+ const userCheck = async (req, res)=>{
+
+  try {
+
+    res.status(200).json({ message: "verified user" });
+    
+  } catch (error) {
+    
+    res.status(error.status || 500).json({error: error.message || "internal server error" })  
+
+  }
+   
+ }
+ const userProfile = async (req,res)=>{
+ 
+     try {
+     const userid =req.user.id;
+     const user = await userModel.findById(userid).select("-password") 
+     res.status(200).json({ message: "user profile ", data: user});
+       
+     } catch (error) {
+       return res.status(500).json({ error: "internal server error" });
+     }
+ 
+   };
+   const userLogout = async(req, res)=>{
     try {
       
         res.clearCookie("token");
@@ -99,82 +132,41 @@ const userRegister = async(req, res)=>{
         res.status(200).json({ message: "user logout success" });
       
     } catch (error) {
+
       return res.status(500).json({ error: "user user does not exist" });
     }
   }
-  const userCheking = async(req,res)=>{
+  const getallUsers = async (req ,res)=>{
+   try {
+    const allUsers = await user.find().select("-password");
+
+    res.status(200).json({ message: "users list fetched", data: allUsers });
+  
+    
+   } catch (error) {
+    res.status(500).json({message: " something went wrong please try again"});}
+     
+  };
+  
+  const getUserdetails = async (req, res)=>{
     try {
-      res.status(200).json({ message: "verified user" });
+     const userid = req.params.id;
+
+      //console.log("userid0" , userid);
+      
+      const userDetails = await user.findById(userid).select("-password")
+
+      res.status(200).json({ message: "User Detail fetched", data: userDetails });
+  
     } catch (error) {
-      return res.status(500).json({ error: "user user does not exist" });
-    }
-  }
-
-  const forgotPassword = async(req, res)=>{
-
-try {   
-  const {email} = req.body;
-
-  //if(!email){
-
-  //return res.status(400).json({error:  "All field are required"})
-  // }
-
-
-   const user = await UserModel.findOne({email});
-   console.log(user)
-   
-   if(!user){
-     return res.status(400).json({ error: "user user does not exist" });
-    }
-      const sckey = process.env.JWT + user.password;
-      const token = JWT.sign({id:user._id, email:user.email},sckey,{expiresin:'1h'})
       
-      const resetURL = `https://your-backend-url/resetpassword?id=${user._id}&token=${token}`;
-      
-                
-       const mailtrans = nodemailer.createTransport({
-        service: 'gmail',
-        auth :{
-          user: "gmailid",
-          pass: "pass",
-        },
-       });
-       const  mailsend ={
-        to: user.email,
-        form: process.env.EMAIL,
-        subject :"Password Reset Request",
-        text : `Your are receiving your password reset link Please click the link you can change your password`
-
-
-       };
-        await mailtrans.sendMail(mailsend)
-        res.status(200).json({message: 'Password reset link send'});
-       
-
-} catch (error) {
-
-      return res.status(500).json({ error: "something wen wrong"});
-}
-};
-
-const resetPassword = async(req,res)=>{
-  try {
-    const user = await UserModel.findOne({_id:id})
-    if(!user){
-      return res.status(400).json({message: "User not exists"})
+      res.status(500).json({message: " something went wrong please try again"}); 
     }
-    const sckey = process.env.JWT + user.password;
-    const veryfy = jwt.veryfy(token, sckey);
-    const encryptedPassword = await bcrypt.hash(password,)
+    
+  };
+  
 
 
 
-  } catch (error) {
-    res.status(500).json({message :" something went worng "})
-  }
-}
 
-
-module.exports = {userRegister,login,userProfile,logout, userCheking, forgotPassword, resetPassword};
-
+module.exports ={userSignup,userLogin,userCheck,userProfile,userLogout,getallUsers,getUserdetails}

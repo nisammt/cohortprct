@@ -1,60 +1,129 @@
+const admin = require('../models/adminModel')
+const bcrypt = require('bcrypt'); 
+const { tokenGenrate } = require('../tkns/token');
 
-const UserModel = require('../models/userModel');
-const bcrypt = require('bcrypt');
-const { tokenGenrate } = require("../tkns/token");
-const nodemailer= require('nodemailer');
-const { json } = require('express');
+const adminSignup = async (req, res) =>{
+    try {
+        const {
+            name,email, password,  mobile, confirmPassword, role = "admin",} = req.body;  
 
-const adminPanel = async (req, res)=>{
+           // console.log(req.body);
+                                                               
+ 
+          if (!name || !email || !mobile || !password || !confirmPassword) {
 
-  
-   try {
-    const {email, password, userType} = req.body
-           if(!email || !password){
-            return res.status(400).json({ error: "All feilds are required" });
+            return res.status(400).json({ message: "All fields required" });
+          }
+
+          if (password !== confirmPassword) {
+            return res
+              .status(400)
+              .json({ message: "Password and Confirm password not match" });
+          }
+          
+          const checkAdmin = await admin.findOne({email, role:"admin"}).select("-password");
+
+           if(checkAdmin){
+
+            return res.status(400).json({message:"Admin user already Exsit"})
            }
-          const user = await UserModel.findOne({email})
-          console.log(user)
-          if(!user){
-            return res.status(400).json({ error: "user user does not exist" });
-          }
-          
-         const passwordcheck = await bcrypt.compare(password,user.password);
-          console.log(passwordcheck);
-          
-          if(!passwordcheck)
-          {
-            res.status(400).json({message: "incorrect password"})
-          }
-          if(!user.userType == "admin")
-          {
-            res.status(400).json({message : "invalid user"})
-          }
-          
-          const token = tokenGenrate(user, "user")
-      // console.log(token)
-      res.cookie("token",token)
+
+           //console.log("check admin",checkAdmin);
+           
+
+           const mobileCheck = await admin.findOne({mobile, role:"admin",}).select("-password");
+
+           if(mobileCheck) {
+             return res.status(400).json({message:"Mobile Number already Exsit"})
+           }
+
+           const salt = await bcrypt.genSalt(10);
+
+           const hashedPassword = await bcrypt.hash(password,salt)
+
+           const adminData = new admin({
+             name,email,password:hashedPassword, mobile,role
+           });
+          // console.log("admin data",adminData);
+           
+
+          const saveadmin = await adminData.save();
+        
+          res.status(200).json({message: "Admin Created Succesfuly", data: saveadmin})      
+
+        
+        
+    } catch (error) {
+
+        res.status(error.status || 500).json({error: error.message || "internal server error" })  
       
-      //res.send("login succesfully")
-      res.status(200).json({message:"admin page logined", data:user});
+    }
+        
+    };
 
+    const adminLogin = async(req, res)=>{
+      try {
+          const {email , password} = req.body;
+           console.log("req.body",req.body);
+           
 
-   
-   
-}
-   catch (error) {
-      res.status(500).json({message: " something went worng"})
-       }
+          if (!email || !password) {
+            return res.status(400).json({ message: "All fields are required" });
+          }
+         
 
-}
-const getallUsers = async (req ,res)=>{
- try {
-  const allUsers = await UserModel.find().select("-password");
-  res.status(200).json({ message: "users list fetched", data: allUsers });
+          let adminw = await admin.findOne({email, role: "admin"});
+         
 
-  
- } catch (error) {
-  res.status(500).json({message: " something went wrong please try again"});   }
-   
-}
-module.exports = {adminPanel,getallUsers}
+          if(!adminw)
+          {
+            return res.status(400).json({message: "Admin User Not Found"})
+          }
+          
+          if(!adminw.isActive){
+            return res.status(400).json({ message: "User profile deactivated" });
+          }
+        
+          
+
+          const checkPassword = await bcrypt.compare(password,adminw.password)
+          
+
+          if(!checkPassword){
+
+            return res.status(400).json({message:"Incorrect Password"})
+
+        
+         }
+        //  console.log(c);
+          
+          const token = tokenGenrate(admin,"admin",res);
+
+          res.cookie("token",token);
+
+         // console.log("token",token)
+
+          const { password: _, ...adminWithoutPassword } = adminw.toObject();
+
+          res.status(200).json({message:"Login successfuly", data :adminWithoutPassword });
+         
+
+        
+      } catch (error) {
+
+      
+        res.status(error.status || 500).json({error: error.message || "internal server error" }) 
+        
+      }
+    }
+    const checkAdmin = async(req, res)=>{
+      try {
+          
+        res.status(200).json({ message: " Admin verified user" });
+
+      } catch (error) {
+        res.status(error.status || 500).json({error: error.message || "internal server error" }) 
+      }
+
+    }
+module.exports ={adminSignup,adminLogin,checkAdmin}

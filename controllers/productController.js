@@ -1,6 +1,4 @@
 
-
-
 const { pluralize } = require('mongoose');
 const { cloudinaryInstance } = require('../config/cloudneryconfig');
 
@@ -10,12 +8,11 @@ const productmodel = require('../models/productModel');
 
 const createProduct = async(req, res)=>{
    try {
-    const {title , price, stock, image} = req.body;
-   //  console.log(req.body);
-    //console.log("location",req.file);
-    //const {id} = req.user;
-    //const cid = req.body;
-    if(!title || !price || !stock )
+    const {title, description, price, stock, image} = req.body;
+     //console.log("reqest Body",req.body);
+
+
+    if(!title || !description || !price || !stock )
     {
         return(res.status(400).json({message: "All field are require"}));
 
@@ -23,16 +20,16 @@ const createProduct = async(req, res)=>{
 
       const uploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
 
-       console.log("uploadfile",uploadResult);
+      // console.log("uploadfile",uploadResult);
    
        const newProduct = new productmodel({title , price, stock, image:uploadResult.url});
-       console.log(newProduct)
+      console.log(newProduct)
        await newProduct.save();
        res.status(200).json({ message: "Product created successfully", data: newProduct });
     
     
    } catch (error) {
-    res.status(500).json({message: " something went wrong please try again"});
+    res.status(error.status || 500).json({error: error.message || "internal server error" })  
    } 
    };
    
@@ -88,6 +85,7 @@ const createProduct = async(req, res)=>{
        const id = req.params.id;
        //console.log(id);
        const deleteitem = await productmodel.findByIdAndDelete(id);
+       
         res.status(200).json({message: "product deleted succesfully", data:deleteitem})
       
      } catch (error) {

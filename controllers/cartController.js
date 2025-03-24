@@ -1,10 +1,13 @@
-const Cart = require("../models/CartModel");
+
+const Cart =  require ('../models/CartModel');
 const Product = require("../models/productModel");
 
 const getCart = async (req, res)=>{
   try {
-    const uid = req.user.id;
-    const cart = await Cart.findOne({uid}).populate("product.productId");
+    const userId = req.user.id;
+
+    const cart = await Cart.findOne({uid}).populate("products.productId");
+
     if(cart){
         return res.status(404).json({ message: "Cart not found" });
     }
@@ -18,34 +21,56 @@ const getCart = async (req, res)=>{
 };
 const addtoCart = async (req, res)=>{
     try {
-        const uid = req.user.id;
-        const {ProductId} = req.body;
-        if(!ProductId) {
-            return res.status(400).json({ message: "product not found" });
+        const userId = req.user.id;
+
+        const { productId } = req.body;
+
+     
+        
+         console.log(userId, "Userid=====");
+         
+
+        console.log("Product ID", productId);
+        
+        
+        if(!productId) {
+
+            return res.status(400).json({ message: "productID not found" });
         };
-        const product = await Product.findById(ProductId);
+
+        const product = await Product.findById(productId);
+
         if (!product) {
             return res.status(404).json({ message: "product not found" });
         }
-        let cart = await Cart.findOne({uid});
+
+        let cart = await Cart.findOne({userId});
+
         if(!cart){
             cart = new Cart({userId, product: []});
         };
-        const productExist = cart.product.some((item)=> item.ProductId.equals(ProductId));
+        
+        const productExist = cart.product.some((item)=> item.productId.equals(productId));
+
         if(productExist){
+
             return res.status(400).json({ message: "Product already added to cart" });
         };
-        cart.Product.push({
-            ProductId,
+
+        cart.product.push({
+            productId,
             price: product.price,
         });
-        cart.calulateTotalPrice();
+        
+          cart.calulateTotalPrice();
+
         await cart.save();
+
         res.status(200).json({ message: "product added to cart", data: cart });
     
         
     } catch (error) {
-        res.status(500).json({ message: "something went wrong", error });
+        res.status(500).json({ message: error.message || "something went wrong",});
         
     };
 };
