@@ -62,7 +62,7 @@ const addtoCart = async (req, res)=>{
             price: product.price,
         });
         
-          cart.calulateTotalPrice();
+      Cart.calculateTotalPrice();
 
         await cart.save();
 
@@ -105,6 +105,7 @@ const addtoCart = async (req, res)=>{
         res.status(200).json({ message: "cart deleted successfully", data: cart });
 
     } catch (error) {
+        
         res.status(500).json({ message: "something went wrong", error }); 
 
     };

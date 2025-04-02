@@ -22,7 +22,7 @@ const createProduct = async(req, res)=>{
 
       // console.log("uploadfile",uploadResult);
    
-       const newProduct = new productmodel({title , price, stock, image:uploadResult.url});
+     const newProduct = new productmodel({title , price, stock, image:uploadResult.url});
       console.log(newProduct)
        await newProduct.save();
        res.status(200).json({ message: "Product created successfully", data: newProduct });

@@ -38,11 +38,15 @@ const cartSchema = new mongoose.Schema(
 
 },{timestamps: true})
 
-cartSchema.methods.calculateTotalPrice = function() {
-    this.totalPrice= this.product.reduce(
+cartSchema.methods.calculateTotalPrice = function () {
+    this.totalPrice = this.product.reduce((total, product) => total + product.price, 0)
+}
 
-        (total, product)=> total + product.price * product.quantity,0);
-};
+//cartSchema.methods.calculateTotalPrice = function() {
+   // this.totalPrice= this.product.reduce(
+
+        //(total, product)=> total + product.price * product.quantity,0);
+//};
 
 module.exports = new mongoose.model("cart",cartSchema)
 

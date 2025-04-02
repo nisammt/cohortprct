@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const carouselSchema = new Schema(
+const carouselSchema = new mongoose.Schema(
     {
       title: {
         type: String,
@@ -21,7 +21,8 @@ const carouselSchema = new Schema(
       },
   
       admin: {
-        type: Schema.Types.ObjectId,
+        type:mongoose.Schema.ObjectId,
+
         ref: "Admin",
       },
     },

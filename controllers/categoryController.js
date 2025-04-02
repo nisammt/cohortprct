@@ -32,8 +32,9 @@ const getCategory = async(req , res)=>{
         const categoryList = await category.find();
         res.status(200).json({ message: "Category list fetched", data: categoryList });
         
-    } catch (error) {
-        res.status(500).json({message: " something went wrong please try again"});   }
+    } catch (error) 
+    {
+        res.status(500).json({message: " something went wrong please try again"});}
 }
 
 module .exports ={createCategory, getCategory}

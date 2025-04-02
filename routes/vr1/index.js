@@ -1,4 +1,5 @@
 const adminRouter = require('./adminRouter.js')
+const carouselRouter = require('./carouselRouter.js')
 const cartRouter = require('./cartRouter.js')
 const categoryRoter = require('./categoryRoute.js')
 const productsRouter = require('./productRoute.js')
@@ -10,6 +11,7 @@ vr1Router.use("/product", productsRouter)
 vr1Router.use("/admin", adminRouter)
 vr1Router.use('/category',categoryRoter)
 vr1Router.use('/cart', cartRouter)
+vr1Router.use('/carousel', carouselRouter)
 
 
 
